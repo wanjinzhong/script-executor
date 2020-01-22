@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -78,6 +79,33 @@ public class WebController {
         }
     }
 
+    @GetMapping("logs")
+    public List<String> getLogs(@RequestParam Integer id) {
+        Optional<Category> categoryOptional = readCategories().stream().filter(c -> Objects.equals(c.getId(), id)).findFirst();
+        if (categoryOptional.isPresent()) {
+            Category category = categoryOptional.get();
+            String logName = getLogName(category.getScript());
+            String logFileName = String.format("%s/logs/%s", getBaseDir(), logName);
+            try {
+                Process process = Runtime.getRuntime().exec(
+                    new String[] {"/bin/bash", "-c", String.format("tail -n 200 %s", logFileName)});
+                process.waitFor();
+                InputStream is = process.getInputStream();
+                BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+                List<String> logs = new ArrayList<>();
+                String line;
+                while ((line = br.readLine()) != null) {
+                    logs.add(line);
+                }
+                return logs;
+            } catch (InterruptedException |IOException e) {
+                e.printStackTrace();
+                return new ArrayList<>();
+            }
+        }
+        return new ArrayList<>();
+    }
+
     private String getLogName(String shellName) {
         int last = shellName.lastIndexOf(".");
         if (last > 0) {
@@ -90,6 +118,7 @@ public class WebController {
         InputStream is;
         String type;
         String logFile;
+        String result;
 
         StreamGobbler(InputStream is, String type, String logFile) {
             this.is = is;
@@ -101,7 +130,7 @@ public class WebController {
             try {
                 InputStreamReader isr = new InputStreamReader(is);
                 BufferedReader br = new BufferedReader(isr);
-                String line = null;
+                String line;
                 while ((line = br.readLine()) != null)
                     Runtime.getRuntime().exec(
                         new String[] {"/bin/bash", "-c", String.format("echo %s >> %s", line, logFile)}).waitFor();
