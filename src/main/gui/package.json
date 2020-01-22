@@ -1,7 +1,7 @@
 {
-  "name": "shell-executor",
+  "name": "script-executor",
   "version": "1.0.0",
-  "description": "shell-executor",
+  "description": "script-executor",
   "author": "Neil Wan <neilw@synnex.com>",
   "private": true,
   "scripts": {

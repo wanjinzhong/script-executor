@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.synnex</groupId>
-    <artifactId>shell-executor</artifactId>
+    <artifactId>script-executor</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>shell-executor</name>
-    <description>Shell Ececutor</description>
+    <name>script-executor</name>
+    <description>Script Ececutor</description>
 
     <properties>
         <java.version>1.8</java.version>

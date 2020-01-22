@@ -1,6 +1,6 @@
-### Shell Executor
-1. Prepare shell script at `/home/neilw/shell-executor/shell`
-2. Add the config script at `/home/neilw/shell-executor/config.json` .The config file like:
+### Script Executor
+1. Prepare script script at `/home/neilw/script-executor/script`
+2. Add the config script at `/home/neilw/script-executor/config.json` .The config file like:
 ```json
 [
   {

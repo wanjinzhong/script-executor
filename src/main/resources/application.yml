@@ -1,4 +1,6 @@
 server:
   servlet:
-    context-path: /shell-executor
-  port: 7999
+    context-path: /exec
+  port: 8999
+app:
+  base-dir: /home/neilw/script-executor

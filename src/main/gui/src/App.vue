@@ -8,7 +8,7 @@
           <div class="desc">{{k.desc}}</div>
         </div>
         <div class="run-div">
-          <el-button type="success" icon="el-icon-s-promotion" v-on:click="run(k.script)">Run</el-button>
+          <el-button type="success" icon="el-icon-s-promotion" v-on:click="run(k.id)">Run</el-button>
         </div>
       </el-card>
     </div>
@@ -34,12 +34,13 @@
             })
         },
         methods: {
-            run(script) {
-                this.axios.get("exec?script=" + script).then(res => {
-                    this.$message({
-                        type: "success",
-                        message: "Running"
-                    })
+            run(id) {
+                this.axios.get("exec?id=" + id).then(res => {
+                    if (res.data === "OK") {
+                        this.$message.success("OK, Let`s run...")
+                    } else {
+                        this.$message.error("Failed to run this script...")
+                    }
                 })
             }
         }

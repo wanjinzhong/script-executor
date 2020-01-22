@@ -1,8 +1,17 @@
 package com.synnex.shellexecutor.bo;
 public class Category {
+    private Integer id;
     private String name;
     private String desc;
     private String script;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
     public String getName() {
         return name;
