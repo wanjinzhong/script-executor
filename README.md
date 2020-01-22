@@ -7,7 +7,8 @@
     "id": 1,
     "name": "PLM2 E2E Restart",
     "desc": "Restart the local PLM2 E2E environment manually",
-    "script": "restart-plm2-e2e.sh"
+    "script": "restart-plm2-e2e.sh",
+    "successMsg": "Message alter when call script successfully"
   }
 ]
 ```
