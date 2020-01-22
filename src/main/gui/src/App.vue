@@ -94,7 +94,7 @@
                         res.data[d] = res.data[d].replace(/\u001B\[30m/g,"<span style='color: black'>")
                         res.data[d] = res.data[d].replace(/\u001B\[31m/g,"<span style='color: red'>")
                         res.data[d] = res.data[d].replace(/\u001B\[32m/g,"<span style='color: green'>")
-                        res.data[d] = res.data[d].replace(/\u001B\[33m/g,"<span style='color: yellow'>")
+                        res.data[d] = res.data[d].replace(/\u001B\[33m/g,"<span style='color: #ffa11b'>")
                         res.data[d] = res.data[d].replace(/\u001B\[34m/g,"<span style='color: blue'>")
                         res.data[d] = res.data[d].replace(/\u001B\[35m/g,"<span style='color: purple'>")
                         res.data[d] = res.data[d].replace(/\u001B\[36m/g,"<span style='color: darkgreen'>")
