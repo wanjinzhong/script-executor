@@ -1,15 +1,16 @@
 <template>
   <div id="app">
-    <Header></Header>
-    <div>
-      <el-card v-for="(k, i) in data" :key="i" class="card">
-        <div class="item-content">
-          <div class="name">{{k.name}}</div>
-          <div class="desc">{{k.desc}}</div>
+    <Header style="margin-bottom: 10px;"></Header>
+    <div style="background-color: rgba(137,138,116,0.29); width: 100%; height: 1px"/>
+    <div style="margin-top: 10px;">
+      <el-card v-for="(k, i) in data" :key="i" class="card" shadow="hover">
+        <div slot="header">
+          {{k.name}}
+          <el-button style="float: right; font-size: 15px" type="success" icon="el-icon-s-promotion" size="small"
+                     v-on:click="run(k.id)">Run
+          </el-button>
         </div>
-        <div class="run-div">
-          <el-button type="success" icon="el-icon-s-promotion" v-on:click="run(k.id)">Run</el-button>
-        </div>
+        <div class="desc">{{k.desc}}</div>
       </el-card>
     </div>
   </div>
@@ -57,8 +58,9 @@
   }
 
   .card {
-    margin-top: 15px;
-    margin-bottom: 15px;
+    display: inline-block;
+    width: 500px;
+    margin: 20px;
   }
 
   .item-content, .run-div {
@@ -70,7 +72,6 @@
   }
 
   .name {
-    font-size: 18px;
     font-weight: bold;
   }
 
