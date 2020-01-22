@@ -4,6 +4,7 @@ public class Category {
     private String name;
     private String desc;
     private String script;
+    private String successMsg;
 
     public Integer getId() {
         return id;
@@ -35,5 +36,13 @@ public class Category {
 
     public void setScript(String script) {
         this.script = script;
+    }
+
+    public String getSuccessMsg() {
+        return successMsg;
+    }
+
+    public void setSuccessMsg(String successMsg) {
+        this.successMsg = successMsg;
     }
 }

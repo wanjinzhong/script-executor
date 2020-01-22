@@ -72,7 +72,7 @@ public class WebController {
             } catch (Exception e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
-            return "OK";
+            return category.getSuccessMsg() == null || category.getSuccessMsg().length() == 0 ? "Success" : category.getSuccessMsg();
         } else {
             throw new RuntimeException("No such script existed.");
         }

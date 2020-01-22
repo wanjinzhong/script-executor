@@ -37,11 +37,11 @@
         methods: {
             run(id) {
                 this.axios.get("exec?id=" + id).then(res => {
-                    if (res.data === "OK") {
-                        this.$message.success("OK, Let`s run...")
-                    } else {
-                        this.$message.error("Failed to run this script...")
-                    }
+                    this.$message({
+                        message: res.data,
+                        type: "success",
+                        duration: 5000
+                    })
                 })
             }
         }
