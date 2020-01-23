@@ -81,6 +81,10 @@
             },
             handleLogClose() {
                 this.logVisible = false;
+                this.logTitle= "";
+                this.logId= 0;
+                this.logs= [];
+                this.enableScroll= true;
                 clearInterval(this.interval)
             },
             openLogs(category) {
