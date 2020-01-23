@@ -139,7 +139,8 @@ public class WebController {
                    .replaceAll("\\u001B\\[34m", "<span style='color: blue'>")
                    .replaceAll("\\u001B\\[35m", "<span style='color: purple'>")
                    .replaceAll("\\u001B\\[36m", "<span style='color: darkgreen'>")
-                   .replaceAll("\\u001B\\[37m", "<span style='color: white'>");
+                   .replaceAll("\\u001B\\[37m", "<span style='color: white'>")
+                   .replaceAll("\\u001B\\[[\\s\\S]{2}", "");
         return line;
     }
 
