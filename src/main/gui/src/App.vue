@@ -24,18 +24,15 @@
       width="80%"
       destroy-on-close
       :before-close="handleLogClose">
-      <!--      <el-input class="log_content"-->
-      <!--        type="textarea" v-model="logs" readonly style="height: 500px;width: 100%">-->
-      <!--      </el-input>-->
       <div
-        style="height: 500px;width: 99%; overflow: auto; border: rgba(105,105,105,0.31) solid 1px; padding: 5px; border-radius: 3px"
-        id="content" v-on:scroll="test();">
+        id="content" v-on:scroll="scroll()">
         <div v-for="(log, i) in logs" style="margin-top: 2px; margin-bottom: 2px; " :key="i"
              :class="i === (logs.length - 1)? 'log_end':'log'" v-html="log">
         </div>
       </div>
       <span slot="footer" class="dialog-footer">
-      <el-button @click="handleLogClose">Close</el-button>
+        <el-button @click="allLogs()" size="small">Full Log</el-button>
+        <el-button @click="handleLogClose" size="small">Close</el-button>
     </span>
     </el-dialog>
   </div>
@@ -52,6 +49,7 @@
             return {
                 data: [],
                 logTitle: "",
+                logId: 0,
                 logVisible: false,
                 logs: [],
                 interval: "",
@@ -85,21 +83,11 @@
                     that.getLogs(category)
                 }, 1000)
                 this.logTitle = category.name + " - Logs"
+                this.logId = category.id
                 this.logVisible = true
             },
             getLogs(category) {
                 this.axios.get('logs?id=' + category.id).then(res => {
-                    for (const d in res.data) {
-                        res.data[d] = res.data[d].replace(/\u001B\[0m/g,"</span>")
-                        res.data[d] = res.data[d].replace(/\u001B\[30m/g,"<span style='color: black'>")
-                        res.data[d] = res.data[d].replace(/\u001B\[31m/g,"<span style='color: red'>")
-                        res.data[d] = res.data[d].replace(/\u001B\[32m/g,"<span style='color: green'>")
-                        res.data[d] = res.data[d].replace(/\u001B\[33m/g,"<span style='color: #ffa11b'>")
-                        res.data[d] = res.data[d].replace(/\u001B\[34m/g,"<span style='color: blue'>")
-                        res.data[d] = res.data[d].replace(/\u001B\[35m/g,"<span style='color: purple'>")
-                        res.data[d] = res.data[d].replace(/\u001B\[36m/g,"<span style='color: darkgreen'>")
-                        res.data[d] = res.data[d].replace(/\u001B\[37m/g,"<span style='color: white'>")
-                    }
                     this.logs = res.data
                     const ele = document.querySelector(".log_end");
                     if (ele != null && this.enableScroll) {
@@ -110,12 +98,15 @@
                     }
                 })
             },
-            test() {
+            scroll() {
                 var panel = document.getElementById("content");
                 var scrollTop, maxScroll, minScroll = 0;
                 scrollTop = panel.scrollTop;
                 maxScroll = panel.scrollHeight - panel.offsetHeight;
                 this.enableScroll = scrollTop >= maxScroll
+            },
+            allLogs() {
+                window.open('allLogs?id=' + this.logId)
             }
         }
     }
@@ -143,5 +134,14 @@
 
   .log_content textarea {
     height: 100%;
+  }
+
+  #content {
+    height: 500px;
+    width: 98%;
+    overflow: auto;
+    border: rgba(105, 105, 105, 0.31) solid 1px;
+    border-radius: 3px;
+    padding: 10px;
   }
 </style>

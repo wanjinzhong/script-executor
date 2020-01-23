@@ -3,6 +3,7 @@ package com.synnex.shellexecutor;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -16,12 +17,10 @@ import com.synnex.shellexecutor.bo.Category;
 import com.synnex.shellexecutor.bo.JsonEntity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/public/api")
 public class WebController {
 
     @Value("${app.base-dir}")
@@ -31,7 +30,7 @@ public class WebController {
         return baseDir.endsWith("/") || baseDir.endsWith("\\") ? baseDir.substring(0, baseDir.length() - 2) : baseDir;
     }
 
-    @GetMapping("categories")
+    @GetMapping("/public/api/categories")
     public JsonEntity<List<Category>> getCategories() {
         return JsonEntity.of(readCategories());
     }
@@ -52,7 +51,7 @@ public class WebController {
         return JSONArray.parseArray(content.toString(), Category.class);
     }
 
-    @GetMapping("exec")
+    @GetMapping("/public/api/exec")
     public String exec(@RequestParam Integer id) {
         Optional<Category> categoryOptional = readCategories().stream().filter(c -> Objects.equals(c.getId(), id)).findFirst();
         if (categoryOptional.isPresent()) {
@@ -79,7 +78,7 @@ public class WebController {
         }
     }
 
-    @GetMapping("logs")
+    @GetMapping("/public/api/logs")
     public List<String> getLogs(@RequestParam Integer id) {
         Optional<Category> categoryOptional = readCategories().stream().filter(c -> Objects.equals(c.getId(), id)).findFirst();
         if (categoryOptional.isPresent()) {
@@ -95,15 +94,53 @@ public class WebController {
                 List<String> logs = new ArrayList<>();
                 String line;
                 while ((line = br.readLine()) != null) {
-                    logs.add(line);
+                    logs.add(replaceColor(line));
                 }
                 return logs;
-            } catch (InterruptedException |IOException e) {
+            } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
                 return new ArrayList<>();
             }
         }
         return new ArrayList<>();
+    }
+
+    @GetMapping("allLogs")
+    public String getAllLogs(@RequestParam Integer id) {
+        Optional<Category> categoryOptional = readCategories().stream().filter(c -> Objects.equals(c.getId(), id)).findFirst();
+        if (categoryOptional.isPresent()) {
+            Category category = categoryOptional.get();
+            String logName = getLogName(category.getScript());
+            String logFileName = String.format("%s/logs/%s", getBaseDir(), logName);
+            try {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(logFileName))));
+                StringBuilder builder = new StringBuilder("<pre>");
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    line = replaceColor(line);
+                    builder.append(line).append("</br>");
+                }
+                builder.append("</pre>");
+                return builder.toString();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return "";
+            }
+        }
+        return "";
+    }
+
+    private String replaceColor(String line) {
+        line = line.replaceAll("\\u001B\\[0m", "</span>")
+                   .replaceAll("\\u001B\\[30m", "<span style='color: black'>")
+                   .replaceAll("\\u001B\\[31m", "<span style='color: red'>")
+                   .replaceAll("\\u001B\\[32m", "<span style='color: green'>")
+                   .replaceAll("\\u001B\\[33m", "<span style='color: #ffa11b'>")
+                   .replaceAll("\\u001B\\[34m", "<span style='color: blue'>")
+                   .replaceAll("\\u001B\\[35m", "<span style='color: purple'>")
+                   .replaceAll("\\u001B\\[36m", "<span style='color: darkgreen'>")
+                   .replaceAll("\\u001B\\[37m", "<span style='color: white'>");
+        return line;
     }
 
     private String getLogName(String shellName) {
@@ -131,9 +168,10 @@ public class WebController {
                 InputStreamReader isr = new InputStreamReader(is);
                 BufferedReader br = new BufferedReader(isr);
                 String line;
-                while ((line = br.readLine()) != null)
+                while ((line = br.readLine()) != null) {
                     Runtime.getRuntime().exec(
                         new String[] {"/bin/bash", "-c", String.format("echo %s >> %s", line, logFile)}).waitFor();
+                }
             } catch (IOException | InterruptedException ioe) {
                 ioe.printStackTrace();
             }
