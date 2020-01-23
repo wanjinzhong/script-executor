@@ -2,7 +2,7 @@
   <div id="app">
     <Header style="margin-bottom: 10px;"></Header>
     <div style="background-color: rgba(137,138,116,0.29); width: 100%; height: 1px"/>
-    <div style="margin-top: 10px;">
+    <div style="margin-top: 10px; vertical-align: top">
       <el-card v-for="(k, i) in data" :key="i" class="card" shadow="hover">
         <div slot="header">
           {{k.name}}
@@ -15,7 +15,7 @@
             </el-button>
           </div>
         </div>
-        <div class="desc">{{k.desc}}</div>
+        <div class="desc" v-html="k.desc"></div>
       </el-card>
     </div>
     <el-dialog
@@ -60,6 +60,13 @@
             const that = this
             this.axios.get("categories").then(res => {
                 that.data = res.data.data;
+                let reg = /(http:\/\/)?([A-Za-z0-9]+\.[A-Za-z0-9]+[\/=\?%\-&_~`@[\]\':+!]*([^<>\"\"])*)/g;
+                for (let i in that.data) {
+                    that.data[i].desc = that.data[i].desc.replace(reg, function (a, b, c) {
+                        return '<a href="http://' + c + '"\>' + a + '</a>';
+                    });
+                    console.log(that.data[i].desc)
+                }
             })
         },
         methods: {
@@ -123,6 +130,7 @@
 
   .card {
     display: inline-block;
+    vertical-align: top;
     width: 500px;
     margin: 20px;
   }
