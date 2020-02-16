@@ -1,6 +1,6 @@
 ### Script Executor
-1. Prepare script script at `/home/neilw/script-executor/script`
-2. Add the config script at `/home/neilw/script-executor/config.json` .The config file like:
+1. Prepare script script at `~/script-executor/script` (You can also change this directory in `application.yml`)
+2. Add the config script at `~/script-executor/config.json` .The config file like:
 ```json
 [
   {
