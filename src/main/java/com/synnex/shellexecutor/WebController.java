@@ -21,6 +21,8 @@ import com.synnex.shellexecutor.bo.Group;
 import com.synnex.shellexecutor.bo.JsonEntity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -72,7 +74,7 @@ public class WebController {
         return groups;
     }
 
-    @GetMapping("/public/api/exec")
+    @RequestMapping(value = "/public/api/exec", method = {RequestMethod.GET, RequestMethod.POST})
     public String exec(@RequestParam Integer id) {
         Optional<Category> categoryOptional = readCategories().stream().flatMap(g -> g.getCategories().stream())
                 .filter(c -> Objects.equals(c.getId(), id)).findFirst();
