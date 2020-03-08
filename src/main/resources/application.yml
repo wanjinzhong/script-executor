@@ -3,4 +3,4 @@ server:
     context-path: /exec
   port: 8999
 app:
-  base-dir: ~/script-executor
+  base-dir: /Users/neilwan/script-executor

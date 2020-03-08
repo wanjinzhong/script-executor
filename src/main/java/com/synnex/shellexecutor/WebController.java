@@ -8,12 +8,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONArray;
 import com.synnex.shellexecutor.bo.Category;
+import com.synnex.shellexecutor.bo.Group;
 import com.synnex.shellexecutor.bo.JsonEntity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,11 +35,11 @@ public class WebController {
     }
 
     @GetMapping("/public/api/categories")
-    public JsonEntity<List<Category>> getCategories() {
+    public JsonEntity<List<Group>> getCategories() {
         return JsonEntity.of(readCategories());
     }
 
-    private List<Category> readCategories() {
+    private List<Group> readCategories() {
         StringBuilder content = new StringBuilder();
         File file = new File(String.format("%s/config.json", getBaseDir()));
         try {
@@ -48,12 +52,30 @@ public class WebController {
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        return JSONArray.parseArray(content.toString(), Category.class);
+        List<Category> categories = JSONArray.parseArray(content.toString(), Category.class);
+        List<Group> groups = categories.stream().map(Category::getGroup).distinct()
+                .filter(g -> g != null && g.trim().length() > 0).map(Group::new).collect(Collectors.toList());
+        Iterator<Category> it = categories.iterator();
+        while (it.hasNext()) {
+            Category category = it.next();
+            groups.stream().filter(g -> Objects.equals(g.getGroup(), category.getGroup())).findFirst().ifPresent(g -> {
+                g.getCategories().add(category);
+                it.remove();
+            });
+        }
+        if (categories.size() > 0) {
+            Group group = new Group();
+            group.setCategories(categories);
+            groups.add(group);
+        }
+        groups.forEach(g -> g.getCategories().sort(Comparator.comparing(Category::getSeq)));
+        return groups;
     }
 
     @GetMapping("/public/api/exec")
     public String exec(@RequestParam Integer id) {
-        Optional<Category> categoryOptional = readCategories().stream().filter(c -> Objects.equals(c.getId(), id)).findFirst();
+        Optional<Category> categoryOptional = readCategories().stream().flatMap(g -> g.getCategories().stream())
+                .filter(c -> Objects.equals(c.getId(), id)).findFirst();
         if (categoryOptional.isPresent()) {
             Category category = categoryOptional.get();
             String logName = getLogName(category.getScript());
@@ -64,9 +86,9 @@ public class WebController {
                     logFile.createNewFile();
                 }
                 Runtime.getRuntime().exec(
-                    new String[] {"/bin/bash", "-c", String.format("echo === $(date \"+%%Y-%%m-%%d %%H:%%M:%%S\") === >> %s", logFileName)}).waitFor();
+                        new String[]{"/bin/bash", "-c", String.format("echo === $(date \"+%%Y-%%m-%%d %%H:%%M:%%S\") === >> %s", logFileName)}).waitFor();
                 Process process = Runtime.getRuntime().exec(
-                    new String[] {"/bin/bash", "-c", String.format("%s/script/%s >>%s/logs/%s", getBaseDir(), category.getScript(), getBaseDir(), logName)});
+                        new String[]{"/bin/bash", "-c", String.format("%s/script/%s >>%s/logs/%s", getBaseDir(), category.getScript(), getBaseDir(), logName)});
                 StreamGobbler errorGobbler = new StreamGobbler(process.getErrorStream(), "ERROR", logFileName);
                 errorGobbler.start();
             } catch (Exception e) {
@@ -80,14 +102,15 @@ public class WebController {
 
     @GetMapping("/public/api/logs")
     public List<String> getLogs(@RequestParam Integer id) {
-        Optional<Category> categoryOptional = readCategories().stream().filter(c -> Objects.equals(c.getId(), id)).findFirst();
+        Optional<Category> categoryOptional = readCategories().stream().flatMap(g -> g.getCategories().stream())
+                .filter(c -> Objects.equals(c.getId(), id)).findFirst();
         if (categoryOptional.isPresent()) {
             Category category = categoryOptional.get();
             String logName = getLogName(category.getScript());
             String logFileName = String.format("%s/logs/%s", getBaseDir(), logName);
             try {
                 Process process = Runtime.getRuntime().exec(
-                    new String[] {"/bin/bash", "-c", String.format("tail -n 200 %s", logFileName)});
+                        new String[]{"/bin/bash", "-c", String.format("tail -n 200 %s", logFileName)});
                 process.waitFor();
                 InputStream is = process.getInputStream();
                 BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF-8"));
@@ -107,7 +130,8 @@ public class WebController {
 
     @GetMapping("allLogs")
     public String getAllLogs(@RequestParam Integer id) {
-        Optional<Category> categoryOptional = readCategories().stream().filter(c -> Objects.equals(c.getId(), id)).findFirst();
+        Optional<Category> categoryOptional = readCategories().stream().flatMap(g -> g.getCategories().stream())
+                .filter(c -> Objects.equals(c.getId(), id)).findFirst();
         if (categoryOptional.isPresent()) {
             Category category = categoryOptional.get();
             String logName = getLogName(category.getScript());
@@ -132,15 +156,15 @@ public class WebController {
 
     private String replaceColor(String line) {
         line = line.replaceAll("\\u001B\\[0m", "</span>")
-                   .replaceAll("\\u001B\\[30m", "<span style='color: black'>")
-                   .replaceAll("\\u001B\\[31m", "<span style='color: red'>")
-                   .replaceAll("\\u001B\\[32m", "<span style='color: green'>")
-                   .replaceAll("\\u001B\\[33m", "<span style='color: #ffa11b'>")
-                   .replaceAll("\\u001B\\[34m", "<span style='color: blue'>")
-                   .replaceAll("\\u001B\\[35m", "<span style='color: purple'>")
-                   .replaceAll("\\u001B\\[36m", "<span style='color: darkgreen'>")
-                   .replaceAll("\\u001B\\[37m", "<span style='color: white'>")
-                   .replaceAll("\\u001B\\[[\\s\\S]{2}", "");
+                .replaceAll("\\u001B\\[30m", "<span style='color: black'>")
+                .replaceAll("\\u001B\\[31m", "<span style='color: red'>")
+                .replaceAll("\\u001B\\[32m", "<span style='color: green'>")
+                .replaceAll("\\u001B\\[33m", "<span style='color: #ffa11b'>")
+                .replaceAll("\\u001B\\[34m", "<span style='color: blue'>")
+                .replaceAll("\\u001B\\[35m", "<span style='color: purple'>")
+                .replaceAll("\\u001B\\[36m", "<span style='color: darkgreen'>")
+                .replaceAll("\\u001B\\[37m", "<span style='color: white'>")
+                .replaceAll("\\u001B\\[[\\s\\S]{2}", "");
         return line;
     }
 
@@ -171,7 +195,7 @@ public class WebController {
                 String line;
                 while ((line = br.readLine()) != null) {
                     Runtime.getRuntime().exec(
-                        new String[] {"/bin/bash", "-c", String.format("echo %s >> %s", line, logFile)}).waitFor();
+                            new String[]{"/bin/bash", "-c", String.format("echo %s >> %s", line, logFile)}).waitFor();
                 }
             } catch (IOException | InterruptedException ioe) {
                 ioe.printStackTrace();

@@ -1,9 +1,18 @@
 package com.synnex.shellexecutor.bo;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class Category {
     private Integer id;
+    @JsonIgnore
+    private String seq;
+    @JsonIgnore
+    private String group;
     private String name;
     private String desc;
+    @JsonIgnore
     private String script;
+    @JsonIgnore
     private String successMsg;
 
     public Integer getId() {
@@ -44,5 +53,21 @@ public class Category {
 
     public void setSuccessMsg(String successMsg) {
         this.successMsg = successMsg;
+    }
+
+    public String getSeq() {
+        return seq;
+    }
+
+    public void setSeq(String seq) {
+        this.seq = seq;
+    }
+
+    public String getGroup() {
+        return group;
+    }
+
+    public void setGroup(String group) {
+        this.group = group;
     }
 }
