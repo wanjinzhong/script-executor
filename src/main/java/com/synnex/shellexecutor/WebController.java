@@ -7,12 +7,15 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Stack;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONArray;
@@ -110,22 +113,8 @@ public class WebController {
             Category category = categoryOptional.get();
             String logName = getLogName(category.getScript());
             String logFileName = String.format("%s/logs/%s", getBaseDir(), logName);
-            try {
-                Process process = Runtime.getRuntime().exec(
-                        new String[]{"/bin/bash", "-c", String.format("tail -n 1000 %s", logFileName)});
-                process.waitFor();
-                InputStream is = process.getInputStream();
-                BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-                List<String> logs = new ArrayList<>();
-                String line;
-                while ((line = br.readLine()) != null) {
-                    logs.add(replaceColor(line));
-                }
-                return logs;
-            } catch (InterruptedException | IOException e) {
-                e.printStackTrace();
-                return new ArrayList<>();
-            }
+            File logFile = new File(logFileName);
+            return readLastNLine(logFile, 500);
         }
         return new ArrayList<>();
     }
@@ -158,14 +147,20 @@ public class WebController {
 
     private String replaceColor(String line) {
         line = line.replaceAll("\\u001B\\[0m", "</span>")
+                .replaceAll("\\u001B\\[1m", "")
+                .replaceAll("\\u001B\\[0;1m", "</span>")
+                .replaceAll("\\u001B\\[m", "</span>")
                 .replaceAll("\\u001B\\[30m", "<span style='color: black'>")
                 .replaceAll("\\u001B\\[31m", "<span style='color: red'>")
-                .replaceAll("\\u001B\\[32m", "<span style='color: green'>")
+                .replaceAll("\\u001B\\[1;32m", "<span style='color: green'>")
+                .replaceAll("\\u001B\\[0;32m", "<span style='color: green'>")
                 .replaceAll("\\u001B\\[33m", "<span style='color: #ffa11b'>")
-                .replaceAll("\\u001B\\[34m", "<span style='color: blue'>")
+                .replaceAll("\\u001B\\[1;34m", "<span style='color: blue'>")
                 .replaceAll("\\u001B\\[35m", "<span style='color: purple'>")
                 .replaceAll("\\u001B\\[36m", "<span style='color: darkgreen'>")
+                .replaceAll("\\u001B\\[0;36m", "<span style='color: darkgreen'>")
                 .replaceAll("\\u001B\\[37m", "<span style='color: white'>")
+                //.replaceAll("\\[1;34m", "<span style='color: #1157BE>")
                 .replaceAll("\\u001B\\[[\\s\\S]{2}", "");
         return line;
     }
@@ -203,5 +198,50 @@ public class WebController {
                 ioe.printStackTrace();
             }
         }
+    }
+
+    public List<String> readLastNLine(File file, long numRead) {
+        List<String> result = new ArrayList<>();
+        long count = 0;
+        if (!file.exists() || file.isDirectory() || !file.canRead()) {
+            return null;
+        }
+        RandomAccessFile fileRead = null;
+        try {
+            fileRead = new RandomAccessFile(file, "r");
+            long length = fileRead.length();
+            if (length == 0L) {
+                return result;
+            } else {
+                long pos = length - 1;
+                while (pos > 0) {
+                    pos--;
+                    fileRead.seek(pos);
+                    if (fileRead.readByte() == '\n') {
+                        String line = replaceColor(fileRead.readLine());
+                        result.add(line);
+                        count++;
+                        if (count == numRead) {
+                            break;
+                        }
+                    }
+                }
+                if (pos == 0) {
+                    fileRead.seek(0);
+                    result.add(replaceColor(fileRead.readLine()));
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (fileRead != null) {
+                try {
+                    fileRead.close();
+                } catch (Exception e) {
+                }
+            }
+        }
+        Collections.reverse(result);
+        return result;
     }
 }
