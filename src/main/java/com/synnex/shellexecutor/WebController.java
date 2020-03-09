@@ -147,20 +147,26 @@ public class WebController {
 
     private String replaceColor(String line) {
         line = line.replaceAll("\\u001B\\[0m", "</span>")
-                .replaceAll("\\u001B\\[1m", "")
+                .replaceAll("\\u001B\\[1m", " ")
                 .replaceAll("\\u001B\\[0;1m", "</span>")
                 .replaceAll("\\u001B\\[m", "</span>")
                 .replaceAll("\\u001B\\[30m", "<span style='color: black'>")
+                .replaceAll("\\u001B\\[0;30m", "<span style='color: black'>")
+                .replaceAll("\\u001B\\[1;30m", "<span style='color: black'>")
                 .replaceAll("\\u001B\\[31m", "<span style='color: red'>")
+                .replaceAll("\\u001B\\[0;31m", "<span style='color: red'>")
+                .replaceAll("\\u001B\\[1;31m", "<span style='color: red'>")
+                .replaceAll("\\u001B\\[32m", "<span style='color: green'>")
                 .replaceAll("\\u001B\\[1;32m", "<span style='color: green'>")
                 .replaceAll("\\u001B\\[0;32m", "<span style='color: green'>")
                 .replaceAll("\\u001B\\[33m", "<span style='color: #ffa11b'>")
+                .replaceAll("\\u001B\\[0;33m", "<span style='color: #ffa11b'>")
+                .replaceAll("\\u001B\\[1;33m", "<span style='color: #ffa11b'>")
                 .replaceAll("\\u001B\\[1;34m", "<span style='color: blue'>")
                 .replaceAll("\\u001B\\[35m", "<span style='color: purple'>")
                 .replaceAll("\\u001B\\[36m", "<span style='color: darkgreen'>")
                 .replaceAll("\\u001B\\[0;36m", "<span style='color: darkgreen'>")
                 .replaceAll("\\u001B\\[37m", "<span style='color: white'>")
-                //.replaceAll("\\[1;34m", "<span style='color: #1157BE>")
                 .replaceAll("\\u001B\\[[\\s\\S]{2}", "");
         return line;
     }
