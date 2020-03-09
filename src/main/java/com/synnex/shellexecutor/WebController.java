@@ -112,7 +112,7 @@ public class WebController {
             String logFileName = String.format("%s/logs/%s", getBaseDir(), logName);
             try {
                 Process process = Runtime.getRuntime().exec(
-                        new String[]{"/bin/bash", "-c", String.format("tail -n 200 %s", logFileName)});
+                        new String[]{"/bin/bash", "-c", String.format("tail -n 1000 %s", logFileName)});
                 process.waitFor();
                 InputStream is = process.getInputStream();
                 BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF-8"));
