@@ -6,7 +6,7 @@ import ElementUI from "element-ui";
 import axios from "axios"
 Vue.use(ElementUI);
 Vue.config.productionTip = false
-// let apiUrl = "http://localhost:8999/exec/public/api"
+// let apiUrl = "http://10.17.81.164:8999/exec/public/api"
 let apiUrl = "public/api"
 axios.defaults.baseURL = apiUrl;
 axios.defaults.withCredentials = true;
