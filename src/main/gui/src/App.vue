@@ -28,12 +28,12 @@
       width="80%"
       destroy-on-close
       :before-close="handleLogClose">
-      <div
+      <pre
         id="content" v-on:scroll="scroll()">
         <div v-for="(log, i) in logs" style="margin-top: 2px; margin-bottom: 2px; " :key="i"
              :class="i === (logs.length - 1)? 'log_end':'log'" v-html="log">
         </div>
-      </div>
+      </pre>
       <span slot="footer" class="dialog-footer">
         <el-button @click="allLogs()" size="small">Full Log</el-button>
         <el-button @click="handleLogClose" size="small">Close</el-button>
@@ -106,10 +106,10 @@
       },
       getLogs(category) {
         this.axios.get('logs?id=' + category.id).then(res => {
-          for (let i in res.data) {
-            res.data[i] = res.data[i].replace(/ /g, "&nbsp;");
-            res.data[i] = res.data[i].replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;");
-          }
+          // for (let i in res.data) {
+            // res.data[i] = res.data[i].replace(/ /g, "&nbsp;");
+            // res.data[i] = res.data[i].replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;");
+          // }
           this.logs = res.data
           const ele = document.querySelector(".log_end");
           if (ele != null && this.enableScroll) {

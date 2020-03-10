@@ -224,7 +224,7 @@ public class WebController {
                     pos--;
                     fileRead.seek(pos);
                     if (fileRead.readByte() == '\n') {
-                        String line = replaceColor(fileRead.readLine());
+                        String line = replaceColor(new String(fileRead.readLine().getBytes("ISO-8859-1"),"utf-8"));
                         result.add(line);
                         count++;
                         if (count == numRead) {
