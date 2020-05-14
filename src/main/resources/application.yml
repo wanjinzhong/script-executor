@@ -1,6 +1,14 @@
 server:
   servlet:
     context-path: /exec
-  port: 8999
-app:
-  base-dir: /Users/neilwan/script-executor
+  port: ${SERVER_PORT:8998}
+
+spring:
+  datasource:
+    driverClassName: com.mysql.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:SHELL_EXECUTOR}?verifyServerCertificate=false&useSSL=true
+    username: ${DB_USER:root}
+    password: ${DB_PWD:synnex-2019}
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL5Dialect
+    show-sql: ${SHOW_SQL:false}

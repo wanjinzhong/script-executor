@@ -1,9 +1,22 @@
-package com.synnex.shellexecutor;
+package com.synnex.shellexecutor.controller;
+
+import com.synnex.shellexecutor.bo.RunResult;
+import com.synnex.shellexecutor.bo.TaskBo;
+import com.synnex.shellexecutor.bo.GroupBo;
+import com.synnex.shellexecutor.bo.JsonEntity;
+import com.synnex.shellexecutor.entity.Task;
+import com.synnex.shellexecutor.service.CommonService;
+import com.synnex.shellexecutor.service.ConfigService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -11,95 +24,56 @@ import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Stack;
-import java.util.stream.Collectors;
-
-import com.alibaba.fastjson.JSONArray;
-import com.synnex.shellexecutor.bo.Category;
-import com.synnex.shellexecutor.bo.Group;
-import com.synnex.shellexecutor.bo.JsonEntity;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class WebController {
 
-    @Value("${app.base-dir}")
-    private String baseDir;
+    @Autowired
+    private ConfigService configService;
 
-    public String getBaseDir() {
-        return baseDir.endsWith("/") || baseDir.endsWith("\\") ? baseDir.substring(0, baseDir.length() - 2) : baseDir;
+    @Autowired
+    private CommonService commonService;
+
+
+    @GetMapping("/public/api/tasks")
+    public JsonEntity<List<GroupBo>> getTasks() {
+        return JsonEntity.of(readTasks());
     }
 
-    @GetMapping("/public/api/categories")
-    public JsonEntity<List<Group>> getCategories() {
-        return JsonEntity.of(readCategories());
-    }
-
-    private List<Group> readCategories() {
-        StringBuilder content = new StringBuilder();
-        File file = new File(String.format("%s/config.json", getBaseDir()));
-        try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
-            String line = reader.readLine();
-            while (line != null) {
-                content.append(line);
-                line = reader.readLine();
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-        List<Category> categories = JSONArray.parseArray(content.toString(), Category.class);
-        List<Group> groups = categories.stream().map(Category::getGroup).distinct()
-                .filter(g -> g != null && g.trim().length() > 0).map(Group::new).collect(Collectors.toList());
-        Iterator<Category> it = categories.iterator();
-        while (it.hasNext()) {
-            Category category = it.next();
-            groups.stream().filter(g -> Objects.equals(g.getGroup(), category.getGroup())).findFirst().ifPresent(g -> {
-                g.getCategories().add(category);
-                it.remove();
-            });
-        }
-        if (categories.size() > 0) {
-            Group group = new Group();
-            group.setCategories(categories);
-            groups.add(group);
-        }
-        groups.forEach(g -> g.getCategories().sort(Comparator.comparing(Category::getSeq)));
+    private List<GroupBo> readTasks() {
+        List<GroupBo> groups = commonService.getGroups();
+        groups.forEach(g -> g.getTasks().sort(Comparator.comparing(TaskBo::getSeq)));
         return groups;
     }
 
     @RequestMapping(value = "/public/api/exec", method = {RequestMethod.GET, RequestMethod.POST})
-    public String exec(@RequestParam Integer id) {
-        Optional<Category> categoryOptional = readCategories().stream().flatMap(g -> g.getCategories().stream())
-                .filter(c -> Objects.equals(c.getId(), id)).findFirst();
-        if (categoryOptional.isPresent()) {
-            Category category = categoryOptional.get();
-            String logName = getLogName(category.getScript());
+    public RunResult exec(@RequestParam Integer id) {
+        Optional<Task> taskOpt = commonService.getTaskById(id);
+        if (taskOpt.isPresent()) {
+            String baseDir = configService.getBaseDir();
+            Task task = taskOpt.get();
+            String logName = getLogName(task.getScript());
+            String runTime = null;
             try {
-                String logFileName = String.format("%s/logs/%s", getBaseDir(), logName);
+                String logFileName = String.format("%s/logs/%s", baseDir, logName);
                 File logFile = new File(logFileName);
-                if (!logFile.exists()) {
-                    logFile.createNewFile();
+                if (logFile.exists()) {
+                    logFile.delete();
                 }
+                logFile.createNewFile();
+                runTime = commonService.updateTaskLatestRunTime(id);
                 Runtime.getRuntime().exec(
-                        new String[]{"/bin/bash", "-c", String.format("echo === $(date \"+%%Y-%%m-%%d %%H:%%M:%%S\") === >> %s", logFileName)}).waitFor();
+                        new String[]{"/bin/bash", "-c", String.format("echo %s >> %s", task.getName(), logFileName)}).waitFor();
                 Process process = Runtime.getRuntime().exec(
-                        new String[]{"/bin/bash", "-c", String.format("%s/script/%s >>%s/logs/%s", getBaseDir(), category.getScript(), getBaseDir(), logName)});
+                        new String[]{"/bin/bash", "-c", String.format("%s/script/%s >>%s/logs/%s", baseDir, task.getScript(), baseDir, logName)});
                 StreamGobbler errorGobbler = new StreamGobbler(process.getErrorStream(), "ERROR", logFileName);
                 errorGobbler.start();
             } catch (Exception e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
-            return category.getSuccessMsg() == null || category.getSuccessMsg().length() == 0 ? "Success" : category.getSuccessMsg();
+            return new RunResult(task.getSuccessMsg() == null || task.getSuccessMsg().length() == 0 ? "Success" : task.getSuccessMsg(), runTime);
         } else {
             throw new RuntimeException("No such script existed.");
         }
@@ -107,12 +81,11 @@ public class WebController {
 
     @GetMapping("/public/api/logs")
     public List<String> getLogs(@RequestParam Integer id) {
-        Optional<Category> categoryOptional = readCategories().stream().flatMap(g -> g.getCategories().stream())
-                .filter(c -> Objects.equals(c.getId(), id)).findFirst();
-        if (categoryOptional.isPresent()) {
-            Category category = categoryOptional.get();
-            String logName = getLogName(category.getScript());
-            String logFileName = String.format("%s/logs/%s", getBaseDir(), logName);
+        Optional<Task> taskOpt = commonService.getTaskById(id);
+        if (taskOpt.isPresent()) {
+            Task task = taskOpt.get();
+            String logName = getLogName(task.getScript());
+            String logFileName = String.format("%s/logs/%s", configService.getBaseDir(), logName);
             File logFile = new File(logFileName);
             return readLastNLine(logFile, 500);
         }
@@ -121,12 +94,11 @@ public class WebController {
 
     @GetMapping("allLogs")
     public String getAllLogs(@RequestParam Integer id) {
-        Optional<Category> categoryOptional = readCategories().stream().flatMap(g -> g.getCategories().stream())
-                .filter(c -> Objects.equals(c.getId(), id)).findFirst();
-        if (categoryOptional.isPresent()) {
-            Category category = categoryOptional.get();
-            String logName = getLogName(category.getScript());
-            String logFileName = String.format("%s/logs/%s", getBaseDir(), logName);
+        Optional<Task> taskOpt = commonService.getTaskById(id);
+        if (taskOpt.isPresent()) {
+            Task task = taskOpt.get();
+            String logName = getLogName(task.getScript());
+            String logFileName = String.format("%s/logs/%s", configService.getBaseDir(), logName);
             try {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(logFileName))));
                 StringBuilder builder = new StringBuilder("<pre>");

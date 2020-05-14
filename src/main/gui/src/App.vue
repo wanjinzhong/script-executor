@@ -5,19 +5,23 @@
     <div style="margin-top: 10px; vertical-align: top">
       <el-collapse v-model="groups">
         <el-collapse-item v-for="(group, i) in data" :key="i" :title="group.group" :name="group.group">
-          <el-card v-for="(k, i) in group.categories" :key="i" class="card" shadow="hover">
+          <el-card v-for="(k, i) in group.tasks" :key="i" class="card" shadow="hover">
             <div slot="header">
               {{k.name}}
               <div style="float: right; font-size: 15px">
+                <div>
                 <el-button icon="el-icon-document" size="small"
                            v-on:click="openLogs(k)">Logs
                 </el-button>
                 <el-button type="success" icon="el-icon-s-promotion" size="small"
                            v-on:click="run(k.id)">Run
                 </el-button>
+                </div>
               </div>
             </div>
             <div class="desc" v-html="k.desc"></div>
+            <el-divider></el-divider>
+            <div class="lastRunTime desc" style="float: right" v-if="k.lastRunTime != null"><i class="el-icon-timer"/> {{k.lastRunTime}}</div>
           </el-card>
         </el-collapse-item>
       </el-collapse>
@@ -63,13 +67,13 @@
     },
     mounted() {
       const that = this
-      this.axios.get("categories").then(res => {
+      this.axios.get("tasks").then(res => {
         that.data = res.data.data;
         let reg = /(http:\/\/)?([A-Za-z0-9]+\.[A-Za-z0-9]+[\/=\?%\-&_~`@[\]\':+!]*([^<>\"\"])*)/g;
         for (let i in that.data) {
           that.groups.push(that.data[i].group)
-          for (let j in that.data[i].categories) {
-            that.data[i].categories[j].desc = that.data[i].categories[j].desc.replace(reg, function (a, b, c) {
+          for (let j in that.data[i].tasks) {
+            that.data[i].tasks[j].desc = that.data[i].tasks[j].desc.replace(reg, function (a, b, c) {
               return '<a href="http://' + c + '"\>' + a + '</a>';
             });
           }
@@ -80,10 +84,17 @@
       run(id) {
         this.axios.get("exec?id=" + id).then(res => {
           this.$message({
-            message: res.data,
+            message: res.data.message,
             type: "success",
             duration: 5000
           })
+          for (let i in this.data) {
+            for (let j in this.data[i].tasks) {
+              if (this.data[i].tasks[j].id == id) {
+                this.data[i].tasks[j].lastRunTime = res.data.runTime;
+              }
+            }
+          }
         })
       },
       handleLogClose() {

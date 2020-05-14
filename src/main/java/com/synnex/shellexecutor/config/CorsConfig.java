@@ -1,4 +1,4 @@
-package com.synnex.shellexecutor;
+package com.synnex.shellexecutor.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
