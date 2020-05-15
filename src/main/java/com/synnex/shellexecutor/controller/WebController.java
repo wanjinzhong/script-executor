@@ -1,15 +1,19 @@
 package com.synnex.shellexecutor.controller;
 
-import com.synnex.shellexecutor.bo.RunResult;
-import com.synnex.shellexecutor.bo.TaskBo;
 import com.synnex.shellexecutor.bo.GroupBo;
 import com.synnex.shellexecutor.bo.JsonEntity;
+import com.synnex.shellexecutor.bo.RunParam;
+import com.synnex.shellexecutor.bo.RunRequest;
+import com.synnex.shellexecutor.bo.RunResult;
+import com.synnex.shellexecutor.bo.TaskBo;
 import com.synnex.shellexecutor.entity.Task;
+import com.synnex.shellexecutor.entity.TaskParam;
 import com.synnex.shellexecutor.service.CommonService;
 import com.synnex.shellexecutor.service.ConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -48,9 +53,9 @@ public class WebController {
         return groups;
     }
 
-    @RequestMapping(value = "/public/api/exec", method = {RequestMethod.GET, RequestMethod.POST})
-    public RunResult exec(@RequestParam Integer id) {
-        Optional<Task> taskOpt = commonService.getTaskById(id);
+    @PostMapping(value = "/public/api/exec")
+    public RunResult exec(@RequestBody RunRequest request) {
+        Optional<Task> taskOpt = commonService.getTaskById(request.getTaskId());
         if (taskOpt.isPresent()) {
             String baseDir = configService.getBaseDir();
             Task task = taskOpt.get();
@@ -63,11 +68,27 @@ public class WebController {
                     logFile.delete();
                 }
                 logFile.createNewFile();
-                runTime = commonService.updateTaskLatestRunTime(id);
+                runTime = commonService.updateTaskLatestRunTime(request.getTaskId());
+                List<String> params = new ArrayList<>();
+                if (request.getParams() != null && request.getParams().size() != 0) {
+                    task.getParams().stream().sorted(Comparator.comparing(TaskParam::getSeq)).forEach(p -> {
+                        for (RunParam rp : request.getParams()) {
+                            if (Objects.equals(p.getId(), rp.getParamId())) {
+                                params.add(rp.getValue());
+                                return;
+                            }
+                        }
+                        params.add("");
+                    });
+                }
                 Runtime.getRuntime().exec(
                         new String[]{"/bin/bash", "-c", String.format("echo %s >> %s", task.getName(), logFileName)}).waitFor();
+                StringBuilder script = new StringBuilder();
+                script.append(baseDir).append("/script/").append(task.getScript());
+                params.forEach(p -> script.append(" ").append(p).append(" "));
+                script.append(">>").append(baseDir).append("/logs/").append(logName);
                 Process process = Runtime.getRuntime().exec(
-                        new String[]{"/bin/bash", "-c", String.format("%s/script/%s >>%s/logs/%s", baseDir, task.getScript(), baseDir, logName)});
+                        new String[]{"/bin/bash", "-c", script.toString()});
                 StreamGobbler errorGobbler = new StreamGobbler(process.getErrorStream(), "ERROR", logFileName);
                 errorGobbler.start();
             } catch (Exception e) {

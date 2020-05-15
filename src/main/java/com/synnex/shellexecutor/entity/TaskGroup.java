@@ -29,6 +29,9 @@ public class TaskGroup {
     @Column
     @Enumerated(EnumType.STRING)
     private YorN expand;
+    @Column
+    @Enumerated(EnumType.STRING)
+    private YorN active;
     @OneToMany(targetEntity = Task.class, mappedBy = "group")
     private List<Task> tasks = new ArrayList<>();
 }
