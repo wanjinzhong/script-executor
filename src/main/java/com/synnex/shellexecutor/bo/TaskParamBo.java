@@ -14,7 +14,7 @@ public class TaskParamBo {
     private String name;
     private ParamType type;
     private List<String> availableValue;
-    private String value;
+    private Object value;
     public static TaskParamBo of(TaskParam param) {
         if (param == null) {
             return null;
@@ -23,8 +23,12 @@ public class TaskParamBo {
         res.setId(param.getId());
         res.setName(param.getName());
         res.setType(param.getType());
+        if (param.getType() == ParamType.BOOLEAN) {
+            res.setValue(Boolean.valueOf(param.getDefaultValue()));
+        } else {
+            res.setValue(param.getDefaultValue());
+        }
         res.setAvailableValue(param.getAvailableValue());
-        res.setValue(param.getDefaultValue());
         return res;
     }
 }

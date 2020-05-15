@@ -10,11 +10,11 @@ import com.synnex.shellexecutor.entity.Task;
 import com.synnex.shellexecutor.entity.TaskParam;
 import com.synnex.shellexecutor.service.CommonService;
 import com.synnex.shellexecutor.service.ConfigService;
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -74,7 +74,7 @@ public class WebController {
                     task.getParams().stream().sorted(Comparator.comparing(TaskParam::getSeq)).forEach(p -> {
                         for (RunParam rp : request.getParams()) {
                             if (Objects.equals(p.getId(), rp.getParamId())) {
-                                params.add(rp.getValue());
+                                params.add(rp.getValue() == null ? "":rp.getValue());
                                 return;
                             }
                         }
@@ -85,7 +85,9 @@ public class WebController {
                         new String[]{"/bin/bash", "-c", String.format("echo %s >> %s", task.getName(), logFileName)}).waitFor();
                 StringBuilder script = new StringBuilder();
                 script.append(baseDir).append("/script/").append(task.getScript());
-                params.forEach(p -> script.append(" ").append(p).append(" "));
+                params.forEach(p -> script.append(" \"")
+                        .append(StringEscapeUtils.unescapeJava(StringEscapeUtils.escapeJava(p)))
+                        .append("\" "));
                 script.append(">>").append(baseDir).append("/logs/").append(logName);
                 Process process = Runtime.getRuntime().exec(
                         new String[]{"/bin/bash", "-c", script.toString()});
