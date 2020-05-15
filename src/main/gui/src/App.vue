@@ -51,19 +51,19 @@
       <el-form ref="form" :model="runForm" label-width="150px">
         <el-form-item v-for="p in runForm.data" :key="p.id" :label="p.name">
           <div style="margin-right: 80px">
-          <el-input v-if="p.type === 'TEXT'" v-model="p.value" clearable></el-input>
-          <el-input v-if="p.type === 'PASSWORD'" type="password" v-model="p.value" show-password></el-input>
-          <el-input-number v-if="p.type === 'NUMBER'" v-model="p.value"></el-input-number>
+          <el-input v-if="p.type === 'TEXT'" v-model="p.value" clearable size="small"></el-input>
+          <el-input v-if="p.type === 'PASSWORD'" type="password" v-model="p.value" show-password  size="small"></el-input>
+          <el-input-number v-if="p.type === 'NUMBER'" v-model="p.value"  size="small"></el-input-number>
           <el-switch v-if="p.type === 'BOOLEAN'" v-model="p.value"></el-switch>
-          <el-select v-if="p.type === 'DROPDOWN'" v-model="p.value">
+          <el-select v-if="p.type === 'DROPDOWN'" v-model="p.value"  size="small">
             <el-option v-for="v in p.availableValue" :key="v" :value="v" :label="v"/>
           </el-select>
           </div>
         </el-form-item>
       </el-form>
       <div style="text-align:right; font-size: 15px">
-        <el-button @click="handleRunClose">Cancel</el-button>
-        <el-button @click="runTaskWithParam(runForm)" type="success">Run</el-button>
+        <el-button @click="handleRunClose"  size="small">Cancel</el-button>
+        <el-button @click="runTaskWithParam(runForm)" type="success"  size="small">Run</el-button>
       </div>
     </el-dialog>
   </div>
