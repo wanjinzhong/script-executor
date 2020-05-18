@@ -1,8 +1,12 @@
 package com.synnex.shellexecutor.service;
 
 import com.synnex.shellexecutor.bo.GroupBo;
+import com.synnex.shellexecutor.bo.Pageable;
+import com.synnex.shellexecutor.bo.RunRequest;
+import com.synnex.shellexecutor.bo.TaskHistoryBo;
 import com.synnex.shellexecutor.entity.Task;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,5 +15,7 @@ public interface CommonService {
 
     Optional<Task> getTaskById(Integer id);
 
-    String updateTaskLatestRunTime(Integer id);
+    LocalDateTime updateTaskLatestRunTimeAndSaveHistory(RunRequest request, String remoteHost, String remoteAddr);
+
+    Pageable<TaskHistoryBo> getTaskHistories(Integer taskId, String remoteAddr, Integer page, Integer size);
 }

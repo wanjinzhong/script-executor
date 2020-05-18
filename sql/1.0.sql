@@ -51,3 +51,25 @@ CREATE TABLE `SHELL_EXECUTOR`.`task_param`
     PRIMARY KEY (`id`),
     UNIQUE INDEX `index1` (`task_id` ASC, `seq` ASC)
 );
+
+DROP TABLE IF EXISTS `SHELL_EXECUTOR`.`task_history`;
+CREATE TABLE `SHELL_EXECUTOR`.`task_history`
+(
+    `id`       BIGINT       NOT NULL AUTO_INCREMENT,
+    `task_id`  INT          NOT NULL,
+    `user`     VARCHAR(128) NULL,
+    `ip`       VARCHAR(128) NOT NULL,
+    `datetime` DATETIME     NOT NULL,
+    PRIMARY KEY (`id`)
+);
+
+DROP TABLE IF EXISTS `SHELL_EXECUTOR`.`history_param`;
+CREATE TABLE `SHELL_EXECUTOR`.`history_param`
+(
+    `id`         BIGINT       NOT NULL AUTO_INCREMENT,
+    `history_id` BIGINT       NOT NULL,
+    `param_id`   INT          NOT NULL,
+    `value`      VARCHAR(128) NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `unique` (`history_id` ASC, `param_id` ASC)
+);

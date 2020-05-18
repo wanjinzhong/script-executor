@@ -20,7 +20,9 @@
               </div>
             </div>
             <div class="desc" v-html="k.desc"></div>
-            <div class="lastRunTime desc" style="float: right" v-if="k.lastRunTime != null"><i class="el-icon-timer"/> {{k.lastRunTime}}</div>
+            <div class="lastRunTime log" style="float: right" v-on:click="showHistory(k)">
+              <i class="el-icon-timer"/>&nbsp;&nbsp;{{k.lastRunTime == null? "Not yet running" : k.lastRunTime}}
+            </div>
           </el-card>
         </el-collapse-item>
       </el-collapse>
@@ -66,6 +68,27 @@
         <el-button @click="runTaskWithParam(runForm)" type="success"  size="small">Run</el-button>
       </div>
     </el-dialog>
+    <el-dialog
+      :title="historyTitle"
+      :visible.sync="historyVisable"
+      width="70%"
+      destroy-on-close
+      :before-close="handleHistoryClose">
+      <el-table :data="history.data" style="width: 100%">
+        <el-table-column prop="user" label="User" width="120"/>
+        <el-table-column prop="ip" label="IP" width="150"/>
+        <el-table-column prop="datetime" label="Datetime" width="150"/>
+        <el-table-column label="Parameters">
+          <template slot-scope="scope">
+            <el-tag v-for="p in scope.row.params" :key="p.param" style="margin: 5px">{{p.param}}: {{p.value}}</el-tag>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination layout="sizes, prev, pager, next"
+                     :total="history.totalSize" :page-sizes="[5, 10, 15, 20]" :page-size="5"
+                     @size-change="handleSizeChange"
+                     @current-change="handleCurrentChange"></el-pagination>
+    </el-dialog>
   </div>
 </template>
 
@@ -89,13 +112,19 @@
         runTitle: "",
         runVisible: false,
         runForm: {},
-        activeGroup: []
+        activeGroup: [],
+        history: {},
+        historyTitle: "",
+        historyVisable: false,
+        page: 0,
+        size: 5,
+        historyTask: {}
       }
     },
     mounted() {
       const that = this
       this.axios.get("tasks").then(res => {
-        that.data = res.data.data;
+        that.data = res.data;
         for (let i in that.data) {
           if  (that.data[i].expand === 'Y') {
             this.activeGroup.push(that.data[i].id)
@@ -113,6 +142,31 @@
       })
     },
     methods: {
+      handleSizeChange(val) {
+        this.size = val
+        this.queryHistory();
+
+      },
+      handleCurrentChange(val) {
+        this.page = val
+        this.queryHistory();
+      },
+      handleHistoryClose() {
+        this.historyTitle = ""
+        this.historyVisable = false
+        this.history = {}
+      },
+      showHistory(task) {
+        this.historyTitle = "History: " + task.name
+        this.historyVisable = true;
+        this.historyTask = task;
+        this.queryHistory();
+      },
+      queryHistory() {
+        this.axios.get("history/" + this.historyTask.id + "?size="+this.size+"&page="+this.page).then(res => {
+          this.history = res.data
+        });
+      },
       handleRunClose() {
         this.runVisible = false
         this.runTitle = ""
@@ -231,5 +285,12 @@
     border: rgba(105, 105, 105, 0.31) solid 1px;
     border-radius: 3px;
     padding: 10px;
+  }
+  .log {
+    color: grey;
+  }
+  .log:hover {
+    cursor: pointer;
+    color: dimgrey;
   }
 </style>

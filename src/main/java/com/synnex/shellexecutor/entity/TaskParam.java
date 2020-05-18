@@ -40,7 +40,7 @@ public class TaskParam {
     @Column(name = "default_value")
     private String defaultValue;
     @Column
-    private String seq;
+    private Integer seq;
 
     public List<String> getAvailableValue() {
         return availableValue == null || availableValue.trim().length() == 0 ? new ArrayList<>() :

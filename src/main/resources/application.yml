@@ -6,9 +6,9 @@ server:
 spring:
   datasource:
     driverClassName: com.mysql.jdbc.Driver
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:SHELL_EXECUTOR}?verifyServerCertificate=false&useSSL=true
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:SHELL_EXECUTOR}?verifyServerCertificate=false&useSSL=true&serverTimezone=Hongkong
     username: ${DB_USER:root}
     password: ${DB_PWD:synnex-2019}
   jpa:
     database-platform: org.hibernate.dialect.MySQL5Dialect
-    show-sql: ${SHOW_SQL:false}
+    show-sql: ${SHOW_SQL:true}

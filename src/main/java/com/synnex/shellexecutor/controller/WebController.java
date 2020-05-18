@@ -1,11 +1,13 @@
 package com.synnex.shellexecutor.controller;
 
 import com.synnex.shellexecutor.bo.GroupBo;
-import com.synnex.shellexecutor.bo.JsonEntity;
+import com.synnex.shellexecutor.bo.Pageable;
 import com.synnex.shellexecutor.bo.RunParam;
 import com.synnex.shellexecutor.bo.RunRequest;
 import com.synnex.shellexecutor.bo.RunResult;
 import com.synnex.shellexecutor.bo.TaskBo;
+import com.synnex.shellexecutor.bo.TaskHistoryBo;
+import com.synnex.shellexecutor.constants.CommonConstants;
 import com.synnex.shellexecutor.entity.Task;
 import com.synnex.shellexecutor.entity.TaskParam;
 import com.synnex.shellexecutor.service.CommonService;
@@ -13,11 +15,13 @@ import com.synnex.shellexecutor.service.ConfigService;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -41,10 +46,9 @@ public class WebController {
     @Autowired
     private CommonService commonService;
 
-
     @GetMapping("/public/api/tasks")
-    public JsonEntity<List<GroupBo>> getTasks() {
-        return JsonEntity.of(readTasks());
+    public List<GroupBo> getTasks() {
+        return readTasks();
     }
 
     private List<GroupBo> readTasks() {
@@ -54,13 +58,13 @@ public class WebController {
     }
 
     @PostMapping(value = "/public/api/exec")
-    public RunResult exec(@RequestBody RunRequest request) {
+    public RunResult exec(@RequestBody RunRequest request, HttpServletRequest httpRequest) {
         Optional<Task> taskOpt = commonService.getTaskById(request.getTaskId());
         if (taskOpt.isPresent()) {
             String baseDir = configService.getBaseDir();
             Task task = taskOpt.get();
             String logName = getLogName(task.getScript());
-            String runTime = null;
+            String runTime;
             try {
                 String logFileName = String.format("%s/logs/%s", baseDir, logName);
                 File logFile = new File(logFileName);
@@ -68,7 +72,8 @@ public class WebController {
                     logFile.delete();
                 }
                 logFile.createNewFile();
-                runTime = commonService.updateTaskLatestRunTime(request.getTaskId());
+                LocalDateTime time = commonService.updateTaskLatestRunTimeAndSaveHistory(request, httpRequest.getRemoteHost(), httpRequest.getRemoteAddr());
+                runTime = time.format(CommonConstants.DTF);
                 List<String> params = new ArrayList<>();
                 if (request.getParams() != null && request.getParams().size() != 0) {
                     task.getParams().stream().sorted(Comparator.comparing(TaskParam::getSeq)).forEach(p -> {
@@ -138,6 +143,11 @@ public class WebController {
             }
         }
         return "";
+    }
+
+    @GetMapping("/public/api/history/{taskId}")
+    public Pageable<TaskHistoryBo> getTaskHistories(@PathVariable("taskId") Integer taskId, HttpServletRequest request, Integer page, Integer size) {
+        return commonService.getTaskHistories(taskId, request.getRemoteAddr(), page, size);
     }
 
     private String replaceColor(String line) {

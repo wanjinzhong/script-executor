@@ -1,11 +1,13 @@
 package com.synnex.shellexecutor.bo;
 
+import com.synnex.shellexecutor.entity.Task;
 import com.synnex.shellexecutor.entity.TaskGroup;
 import com.synnex.shellexecutor.enums.YorN;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -27,7 +29,7 @@ public class GroupBo {
         res.setGroup(group.getName());
         if (group.getTasks() != null && group.getTasks().size() > 0) {
             res.setTasks(group.getTasks().stream().filter(task -> Objects.equals(task.getActive(), YorN.Y))
-                    .map(TaskBo::of).collect(Collectors.toList()));
+                    .sorted(Comparator.comparing(Task::getSeq)).map(TaskBo::of).collect(Collectors.toList()));
         }
         return res;
     }

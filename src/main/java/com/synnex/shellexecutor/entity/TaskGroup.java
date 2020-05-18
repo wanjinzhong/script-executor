@@ -30,6 +30,8 @@ public class TaskGroup {
     @Enumerated(EnumType.STRING)
     private YorN expand;
     @Column
+    private Integer seq;
+    @Column
     @Enumerated(EnumType.STRING)
     private YorN active;
     @OneToMany(targetEntity = Task.class, mappedBy = "group")
