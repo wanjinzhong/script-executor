@@ -20,7 +20,7 @@ CREATE TABLE `SHELL_EXECUTOR`.`task_group`
     `id`     INT          NOT NULL AUTO_INCREMENT,
     `name`   VARCHAR(128) NOT NULL,
     `seq`    INT          NOT NULL,
-    `expand` VARCHAR(1)   NOT NULL DEFAULT 'N',
+    `is_default` VARCHAR(1)   NOT NULL DEFAULT 'N',
     `active` VARCHAR(1)   NOT NULL DEFAULT 'Y',
     PRIMARY KEY (`id`),
     UNIQUE INDEX `name_UNIQUE` (`name` ASC),

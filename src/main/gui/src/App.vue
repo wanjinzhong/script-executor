@@ -1,21 +1,20 @@
 <template>
   <div id="app">
     <Header style="margin-bottom: 10px;"></Header>
-    <div style="background-color: rgba(137,138,116,0.29); width: 100%; height: 1px"/>
-    <div style="margin-top: 10px; vertical-align: top">
-      <el-collapse v-model="activeGroup">
-        <el-collapse-item v-for="group in data" :key="group.id" :title="group.group" :name="group.id">
-          <el-card v-for="(k, i) in group.tasks" :key="i" class="card" shadow="hover">
-            <div slot="header">
-              {{k.name}}
-              <div style="float: right; font-size: 15px">
+    <div style="margin-top: 20px; vertical-align: top">
+      <el-tabs v-model="activeGroup" @tab-click="switchGroup" type="border-card" :stretch="true">
+        <el-tab-pane v-for="group in data" :key="group.id" :name="group.id + ''" :label="group.group" >
+          <el-card v-for="(k, i) in group.tasks" :key="i" class="card" shadow="hover" style="font-size: 13px">
+            <div slot="header" style="height: 30px">
+              <div style="display:inline-block; height: 30px; vertical-align: center; line-height: 30px">{{k.name}}</div>
+              <div style="display:inline-block; float: right; text-align: right">
                 <div>
-                <el-button icon="el-icon-document" size="small"
-                           v-on:click="openLogs(k)">Logs
-                </el-button>
-                <el-button type="success" icon="el-icon-s-promotion" size="small"
-                           v-on:click="runTask(k)">Run
-                </el-button>
+                  <el-button icon="el-icon-document" size="small"
+                             v-on:click="openLogs(k)">Logs
+                  </el-button>
+                  <el-button type="success" icon="el-icon-s-promotion" size="small"
+                             v-on:click="runTask(k)">Run
+                  </el-button>
                 </div>
               </div>
             </div>
@@ -24,8 +23,8 @@
               <i class="el-icon-timer"/>&nbsp;&nbsp;{{k.lastRunTime == null? "Not yet running" : k.lastRunTime}}
             </div>
           </el-card>
-        </el-collapse-item>
-      </el-collapse>
+        </el-tab-pane>
+      </el-tabs>
     </div>
     <el-dialog
       :title="logTitle"
@@ -112,7 +111,7 @@
         runTitle: "",
         runVisible: false,
         runForm: {},
-        activeGroup: [],
+        activeGroup: '1',
         history: {},
         historyTitle: "",
         historyVisable: false,
@@ -126,8 +125,9 @@
       this.axios.get("tasks").then(res => {
         that.data = res.data;
         for (let i in that.data) {
-          if  (that.data[i].expand === 'Y') {
-            this.activeGroup.push(that.data[i].id)
+          if  (that.data[i].defaultGroup === 'Y') {
+            this.activeGroup = that.data[i].id + "";
+            break;
           }
         }
         let reg = /(http:\/\/)?([A-Za-z0-9]+\.[A-Za-z0-9]+[\/=\?%\-&_~`@[\]\':+!]*([^<>\"\"])*)/g;
@@ -142,6 +142,9 @@
       })
     },
     methods: {
+      switchGroup() {
+
+      },
       handleSizeChange(val) {
         this.size = val
         this.queryHistory();
@@ -272,6 +275,7 @@
   .desc {
     font-style: italic;
     color: dimgrey;
+    line-height: 1.7;
   }
 
   .log_content textarea {

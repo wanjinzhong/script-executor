@@ -26,9 +26,9 @@ public class TaskGroup {
     private Integer id;
     @Column
     private String name;
-    @Column
+    @Column(name = "is_default")
     @Enumerated(EnumType.STRING)
-    private YorN expand;
+    private YorN defaultGroup;
     @Column
     private Integer seq;
     @Column

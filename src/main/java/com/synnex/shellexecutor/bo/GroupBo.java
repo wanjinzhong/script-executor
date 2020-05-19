@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class GroupBo {
     private Integer id;
     private String group;
-    private YorN expand;
+    private YorN defaultGroup;
     private List<TaskBo> tasks = new ArrayList<>();
     public static GroupBo of(TaskGroup group) {
         if (group == null) {
@@ -25,7 +25,7 @@ public class GroupBo {
         }
         GroupBo res = new GroupBo();
         res.setId(group.getId());
-        res.setExpand(group.getExpand());
+        res.setDefaultGroup(group.getDefaultGroup());
         res.setGroup(group.getName());
         if (group.getTasks() != null && group.getTasks().size() > 0) {
             res.setTasks(group.getTasks().stream().filter(task -> Objects.equals(task.getActive(), YorN.Y))

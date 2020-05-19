@@ -14,7 +14,7 @@ Vue.prototype.axios = axios;
 axios.interceptors.response.use(function (response) {
   return response;
 }, function (error) {
-  if (error.response.data.status == 500) {
+  if (error.response.data.status === 500) {
     Vue.prototype.$notify({
       title: "Error",
       message: error.response.data.message,
