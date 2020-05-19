@@ -19,7 +19,7 @@
               </div>
             </div>
             <div class="desc" v-html="k.desc"></div>
-            <div class="lastRunTime log" style="float: right" v-on:click="showHistory(k)">
+            <div class="lastRunTime history" style="float: right" v-on:click="showHistory(k)">
               <i class="el-icon-timer"/>&nbsp;&nbsp;{{k.lastRunTime == null? "Not yet running" : k.lastRunTime}}
             </div>
           </el-card>
@@ -290,10 +290,10 @@
     border-radius: 3px;
     padding: 10px;
   }
-  .log {
+  .history {
     color: grey;
   }
-  .log:hover {
+  .history:hover {
     cursor: pointer;
     color: dimgrey;
   }
