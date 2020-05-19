@@ -5,7 +5,7 @@ server:
 
 spring:
   datasource:
-    driverClassName: com.mysql.jdbc.Driver
+    driverClassName: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:SHELL_EXECUTOR}?verifyServerCertificate=false&useSSL=true&serverTimezone=Hongkong
     username: ${DB_USER:root}
     password: ${DB_PWD:synnex-2019}

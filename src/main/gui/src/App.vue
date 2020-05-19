@@ -74,9 +74,9 @@
       destroy-on-close
       :before-close="handleHistoryClose">
       <el-table :data="history.data" style="width: 100%">
-        <el-table-column prop="user" label="User" width="120"/>
+        <el-table-column prop="user" label="User" width="150"/>
         <el-table-column prop="ip" label="IP" width="150"/>
-        <el-table-column prop="datetime" label="Datetime" width="150"/>
+        <el-table-column prop="datetime" label="Datetime" width="180"/>
         <el-table-column label="Parameters">
           <template slot-scope="scope">
             <el-tag v-for="p in scope.row.params" :key="p.param" style="margin: 5px">{{p.param}}: {{p.value}}</el-tag>

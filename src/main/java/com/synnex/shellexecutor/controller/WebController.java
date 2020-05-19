@@ -72,7 +72,7 @@ public class WebController {
                     logFile.delete();
                 }
                 logFile.createNewFile();
-                LocalDateTime time = commonService.updateTaskLatestRunTimeAndSaveHistory(request, httpRequest.getRemoteHost(), httpRequest.getRemoteAddr());
+                LocalDateTime time = commonService.updateTaskLatestRunTimeAndSaveHistory(request, httpRequest.getRemoteAddr());
                 runTime = time.format(CommonConstants.DTF);
                 List<String> params = new ArrayList<>();
                 if (request.getParams() != null && request.getParams().size() != 0) {
@@ -150,6 +150,12 @@ public class WebController {
         return commonService.getTaskHistories(taskId, request.getRemoteAddr(), page, size);
     }
 
+    @GetMapping("/public/api/refreshIpTable")
+    public String refreshIpTable() {
+        commonService.refreshIpTable();
+        return "OK";
+    }
+
     private String replaceColor(String line) {
         line = line.replaceAll("\\u001B\\[0m", "</span>")
                 .replaceAll("\\u001B\\[1m", " ")
@@ -188,7 +194,6 @@ public class WebController {
         InputStream is;
         String type;
         String logFile;
-        String result;
 
         StreamGobbler(InputStream is, String type, String logFile) {
             this.is = is;

@@ -15,7 +15,9 @@ public interface CommonService {
 
     Optional<Task> getTaskById(Integer id);
 
-    LocalDateTime updateTaskLatestRunTimeAndSaveHistory(RunRequest request, String remoteHost, String remoteAddr);
+    LocalDateTime updateTaskLatestRunTimeAndSaveHistory(RunRequest request, String remoteAddr);
 
     Pageable<TaskHistoryBo> getTaskHistories(Integer taskId, String remoteAddr, Integer page, Integer size);
+
+    void refreshIpTable();
 }
